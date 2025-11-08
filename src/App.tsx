@@ -8,6 +8,7 @@ import CardView from './components/views/CardView';
 import ChartsView from './components/views/ChartsView';
 import CalendarView from './components/views/CalendarView';
 import CategoryView from './components/views/CategoryView';
+import ExportModal from './components/ExportModal';
 import {
   List,
   LayoutGrid,
@@ -39,6 +40,7 @@ function App() {
   });
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [showFilters, setShowFilters] = useState(true);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Memoized filtered and sorted expenses
   const filteredExpenses = useMemo(
@@ -71,38 +73,6 @@ function App() {
     alert(`Expense Details:\n\n${JSON.stringify(expense, null, 2)}`);
   };
 
-  const handleExportCSV = () => {
-    // Create CSV header
-    const headers = ['Date', 'Category', 'Amount', 'Description'];
-
-    // Create CSV rows from expenses
-    const rows = sortedExpenses.map(expense => [
-      expense.date,
-      expense.category,
-      expense.amount.toString(),
-      expense.description
-    ]);
-
-    // Combine headers and rows
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-
-    // Create blob and download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-
-    link.setAttribute('href', url);
-    link.setAttribute('download', `expenses_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   const viewButtons = [
     { mode: 'list' as ViewMode, icon: List, label: 'List' },
     { mode: 'cards' as ViewMode, icon: LayoutGrid, label: 'Cards' },
@@ -132,8 +102,8 @@ function App() {
                 Add Expense
               </button>
               <button
-                onClick={handleExportCSV}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                onClick={() => setShowExportModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
               >
                 <Download size={20} />
                 Export Data
@@ -288,6 +258,14 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        expenses={sortedExpenses}
+        availableCategories={categories}
+      />
     </div>
   );
 }
